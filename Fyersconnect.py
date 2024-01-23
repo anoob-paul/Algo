@@ -1,5 +1,8 @@
 # Import the required module from the fyers_apiv3 package
 from fyers_apiv3 import fyersModel
+from datetime import datetime
+from tabulate import tabulate
+
 import os
 
 
@@ -56,7 +59,7 @@ def generateAccessToken() :
 
 
 if saved_token:
-    print('Token loaded from file:', saved_token)
+    print('Token loaded from file')
     fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=saved_token, log_path="")
 
 else:
@@ -70,7 +73,7 @@ else:
 
 data = {
     "symbol":"NSE:SBIN-EQ",
-    "resolution":"D",
+    "resolution":"5",
     "date_format":"1",
     "range_from":"2023-12-01",
     "range_to":"2023-12-31",
@@ -78,7 +81,13 @@ data = {
 }
 
 hist_data = fyers.history(data=data)
-print(hist_data)
+candles_data = hist_data['candles']
+# Convert epoch time to dd-mm-yyyy format
+formatted_candles = [[datetime.utcfromtimestamp(candle[0]).strftime('%d-%m-%Y')] + candle[1:] for candle in candles_data]
 
+# Get header and table
+header = ["Date", "Open", "High", "Low", "Close", "Volume"]
+table = tabulate(formatted_candles, headers=header)
+print(table)
 
 
