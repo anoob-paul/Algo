@@ -2,8 +2,8 @@
 from fyers_apiv3 import fyersModel
 from datetime import datetime
 from tabulate import tabulate
-
 import os
+import pandas as pd
 
 
 global fyers
@@ -72,22 +72,29 @@ else:
 # print(funds)
 
 data = {
-    "symbol":"NSE:SBIN-EQ",
+    "symbol":"NSE:NIFTYBANK-INDEX",
     "resolution":"5",
     "date_format":"1",
-    "range_from":"2023-12-01",
-    "range_to":"2023-12-31",
+    "range_from":"2024-01-01",
+    "range_to":"2024-01-22",
     "cont_flag":"1"
 }
 
 hist_data = fyers.history(data=data)
 candles_data = hist_data['candles']
-# Convert epoch time to dd-mm-yyyy format
-formatted_candles = [[datetime.utcfromtimestamp(candle[0]).strftime('%d-%m-%Y')] + candle[1:] for candle in candles_data]
+# # Convert epoch time to dd-mm-yyyy format
+# formatted_candles = [[datetime.utcfromtimestamp(candle[0]).strftime('%d-%m-%Y')] + candle[1:] for candle in candles_data]
 
-# Get header and table
-header = ["Date", "Open", "High", "Low", "Close", "Volume"]
-table = tabulate(formatted_candles, headers=header)
-print(table)
+# # Get header and table
+# header = ["Date", "Open", "High", "Low", "Close", "Volume"]
+# table = tabulate(formatted_candles, headers=header)
+# print(table)
+
+# Convert epoch time to dd-mm-yyyy format and create a DataFrame
+formatted_candles = pd.DataFrame(candles_data, columns=["Epoch Time", "Open", "High", "Low", "Close", "Volume"])
+formatted_candles["Date"] = formatted_candles["Epoch Time"].apply(lambda x: datetime.utcfromtimestamp(x).strftime('%d-%m-%Y %H:%M:%S'))
+formatted_candles = formatted_candles[["Date", "Open", "High", "Low", "Close", "Volume"]]
 
 
+# Print the DataFrame
+print(formatted_candles)
