@@ -2,11 +2,14 @@
 from fyers_apiv3 import fyersModel
 import os
 
+
+global fyers
 client_id = "FAAAAAMMMMMMM-100"  # this values to be replaced
 secret_key = "HHHHHHHHHH"    # this values to be replaced
 redirect_uri = "https://www.google.co.in/" 
 response_type = "code"  #  This value must always be “code”
 grant_type = "authorization_code"  
+
 
 
 
@@ -54,11 +57,12 @@ def generateAccessToken() :
 
 if saved_token:
     print('Token loaded from file:', saved_token)
+    fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=saved_token, log_path="")
+
 else:
     access_token = generateAccessToken()
     writeAccessCodeToFile(access_token)
 
-fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=access_token, log_path="")
 # profile = fyers.get_profile()
 # funds = fyers.funds()
 # print(profile)
