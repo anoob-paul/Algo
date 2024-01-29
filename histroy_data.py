@@ -17,7 +17,7 @@ def read_config(file_path):
             config[key.strip()] = value.strip()
     return config
 
-config_file_path = 'config.txt'
+config_file_path = 'config.ini'
 config = read_config(config_file_path)
 
 # Access the values by attribute name
@@ -49,7 +49,11 @@ saved_token = readAccessCodeFromFile()
 
 def savehistorytoFile(histrorical_response):
     # Open the CSV file for writing
-    with open('C:\codebase\Python\Algo\historical data\BN_5minsData_Q4_2023.csv', 'w', newline='') as csvfile:
+    folder_name= config['folder_location']
+    file_ext= '.csv'
+    file_name = input("Enter the file name to be given: ")
+    file_path =  file_name.join([folder_name, file_ext])
+    with open(file_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Write the headers to the CSV file
         writer.writerow(['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
@@ -106,8 +110,4 @@ else:
     access_token = generateAccessToken()
     writeAccessCodeToFile(access_token)
 
-# profile = fyers.get_profile()
-# funds = fyers.funds()
-# print(profile)
-# print(funds)
 
