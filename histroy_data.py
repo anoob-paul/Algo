@@ -1,7 +1,7 @@
 # Import the required module from the fyers_apiv3 package
 from fyers_apiv3 import fyersModel
 from fyers_apiv3.FyersWebsocket import data_ws
-import datetime
+from datetime import datetime, timedelta
 from tabulate import tabulate
 import os
 import pandas as pd
@@ -42,27 +42,46 @@ def readAccessCodeFromFile():
 
 saved_token = readAccessCodeFromFile()
 
-def savehistorytoFile(histrorical_response):
-    # Open the CSV file for writing
+
+
+def generate_history(symbol,from_date, to_date,time_frame ):
+    # Convert from_date and to_date to datetime objects
+    from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+    to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+
+    # Define the maximum number of days per API call
+    max_days_per_call = 100
+
+    # Calculate the number of API calls needed based on the date range
+    delta_days = (to_date - from_date).days + 1
+    num_api_calls = (delta_days // max_days_per_call) + (1 if delta_days % max_days_per_call != 0 else 0)
+
+    folder_name= config['folder_location']
     folder_name= config['folder_location']
     file_ext= '.csv'
     file_name = input("Enter the file name to be given: ")
     file_path =  file_name.join([folder_name, file_ext])
-    with open(file_path, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        # Write the headers to the CSV file
-        writer.writerow(['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
-        # Write the data to the CSV file
-        for candle in histrorical_response['candles']:
-            epoch_time = candle[0]
-            timestamp = datetime.datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
-            candle[0] = timestamp
-            writer.writerow(candle)
 
-def generate_history(symbol,from_date, to_date,time_frame ):
-    data = {"symbol":symbol,"resolution":time_frame,"date_format":"1","range_from":from_date,"range_to":to_date,"cont_flag":"1"}
-    historical_response = fyers.history(data)
-    savehistorytoFile(historical_response)
+    # Open the CSV file for writing 
+    with open(file_path, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+        for api_call in range(num_api_calls):
+            # Calculate the date range for the current API call
+            start_date = from_date + timedelta(days=api_call * max_days_per_call)
+            end_date = min(to_date, start_date + timedelta(days=max_days_per_call - 1))
+
+            #  data dictionary for API call
+            data = {"symbol": symbol, "resolution": time_frame, "date_format": "1", "range_from": start_date, "range_to": end_date, "cont_flag": "1"}
+            # Make API call for the current date range
+            historical_response = fyers.history(data)
+           
+            # save data as needed.
+            for candle in historical_response['candles']:
+                epoch_time = candle[0]
+                timestamp = datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
+                candle[0] = timestamp
+                writer.writerow(candle)
 
 def generateAccessToken() :
     response_type = "code"  # This value must always be “code”
