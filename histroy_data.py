@@ -29,13 +29,9 @@ redirect_uri = "https://www.google.co.in/"
 response_type = "code"  #  This value must always be “code”
 grant_type = "authorization_code"  
 
-
-
-
 def writeAccessCodeToFile(token):
     with open('authcode.txt', 'w') as file:
         file.write(token)
-
 
 def readAccessCodeFromFile():
     try:
@@ -45,7 +41,6 @@ def readAccessCodeFromFile():
         return None
 
 saved_token = readAccessCodeFromFile()
-
 
 def savehistorytoFile(histrorical_response):
     # Open the CSV file for writing
@@ -64,18 +59,14 @@ def savehistorytoFile(histrorical_response):
             candle[0] = timestamp
             writer.writerow(candle)
 
-
 def generate_history(symbol,from_date, to_date,time_frame ):
     data = {"symbol":symbol,"resolution":time_frame,"date_format":"1","range_from":from_date,"range_to":to_date,"cont_flag":"1"}
     historical_response = fyers.history(data)
     savehistorytoFile(historical_response)
 
-
 def generateAccessToken() :
-
     response_type = "code"  # This value must always be “code”
     grant_type = "authorization_code"  
-
     # Create a session model with the provided credentials
     session = fyersModel.SessionModel(
         client_id=client_id,
@@ -100,10 +91,10 @@ def generateAccessToken() :
 if saved_token:
     print('Token loaded from file')
     fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=saved_token, log_path="")
-    f_date = "2024-01-01"
-    t_date = "2024-01-02"
-    t_frame =5
-    symbol ="NSE:NIFTYBANK-INDEX"
+    f_date = config['from_date'] 
+    t_date = config['to_date'] 
+    t_frame = config['time_frame']
+    symbol = config['symbol']
     generate_history(symbol =symbol, from_date=f_date,to_date=t_date,time_frame=t_frame)
 
 else:
