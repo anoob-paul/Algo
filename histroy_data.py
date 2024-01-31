@@ -25,14 +25,17 @@ config = read_config(config_file_path)
 global fyers
 client_id = config['client_id']  #client id and secret key are fetched from config file 
 secret_key = config['secret_key']  
-redirect_uri = "https://www.google.co.in/" 
+redirect_uri = "https://www.google.co.in/"  # we can give any url here. the authcode will be appended to this link and we need this authocode to proceed
 response_type = "code"  #  This value must always be “code”
 grant_type = "authorization_code"  
 
+#below function save the authocode to a txt file. 1 authocode is enough for a trading day. so once its generated we are saving to a file 
+# and fetch it. When next day starts we need to delete the authcode.txt file to generate and save the new toaken
 def writeAccessCodeToFile(token):
     with open('authcode.txt', 'w') as file:
         file.write(token)
 
+#function to read the token from file 
 def readAccessCodeFromFile():
     try:
         with open('authcode.txt', 'r') as file:
@@ -43,7 +46,7 @@ def readAccessCodeFromFile():
 saved_token = readAccessCodeFromFile()
 
 
-
+# function which calls the hostrical data and save to a .csv file time fram, from date, to date and symbol are loaded from config.ini file 
 def generate_history(symbol,from_date, to_date,time_frame ):
     # Convert from_date and to_date to datetime objects
     from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
@@ -83,6 +86,7 @@ def generate_history(symbol,from_date, to_date,time_frame ):
                 candle[0] = timestamp
                 writer.writerow(candle)
 
+#function to generate the access token for a new day. called once in a day and the access tiken will be save in the txt file 
 def generateAccessToken() :
     response_type = "code"  # This value must always be “code”
     grant_type = "authorization_code"  
@@ -102,7 +106,7 @@ def generateAccessToken() :
     # Generate the access token using the authorization code
     auth_response = session.generate_token()
     access_token = auth_response['access_token']
-    print(' access token is :',access_token)
+    # print(' access token is :',access_token)
 
     return access_token
 
