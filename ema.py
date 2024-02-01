@@ -109,22 +109,9 @@ def generate_history():
     data = pd.DataFrame.from_dict(response['candles'])
     cols = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
     data.columns = cols
-    # data['ema'] = data['close'].ewm(span = 5 , min_periods=5).mean()
-
     data['EMA_5'] = data['Close'].ewm(span=5, adjust=False).mean()
+    data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
     print (data)
-# Display the DataFrame with the new EMA_10 column
-# print(data)
-
-
-    # data['datetime'] = pd.to_datetime(data['datetime'], unit="s")
-    # data['datetime'] = data['datetime'].dt.tz_localize('utc').dt.tz_convert('Asia/Kolkata')
-    # data['datetime'] = data['datetime'].dt.tz_localize(None)
-    # data = data.set_index('datetime')
-    # data['ema'] = data['close'].ewm(span = 5 , min_periods=5).mean()
-    # emadata5 = data
-    # # emadata15 = data
-
 
 
 if saved_token:
@@ -136,47 +123,3 @@ else:
     print('access token not found. so generating a new access token')
     access_token = generateAccessToken()
     writeAccessCodeToFile(access_token)
-
-
-
-
-
-# def onmessage(message):
-#     print("Received Message:", message)
-#     # print (message['symbol'],message['ltp'] )
-
-
- 
-# def onerror(message):
-#     print("Error:", message)
-
-# def onclose(message):
-#     print("Connection closed:", message)
-
-# def onopen():
-#     # Specify the data type and symbols you want to subscribe to
-#     data_type = "SymbolUpdate"
-#     # Subscribe to the specified symbols and data type
-#     symbols = ["NSE:NIFTY50-INDEX"]
-#     ws_fyers.subscribe(symbols=symbols, data_type=data_type)
-#     # Keep the socket running to receive real-time data
-#     ws_fyers.keep_running()
-
-# # Replace the sample access token with your actual access token obtained from Fyers
-# ws_access_token = f"{client_id}:{saved_token}"
-# print('ws_access_token is ++++++++++++++++:',ws_access_token)
-# # Create a FyersDataSocket instance with the provided parameters
-# ws_fyers = data_ws.FyersDataSocket(
-#     access_token=ws_access_token,       # Access token in the format "appid:accesstoken"
-#     log_path="",                     # Path to save logs. Leave empty to auto-create logs in the current directory.
-#     litemode=False,                  # Lite mode disabled. Set to True if you want a lite response.
-#     write_to_file=False,             # Save response in a log file instead of printing it.
-#     reconnect=True,                  # Enable auto-reconnection to WebSocket on disconnection.
-#     on_connect=onopen,               # Callback function to subscribe to data upon connection.
-#     on_close=onclose,                # Callback function to handle WebSocket connection close events.
-#     on_error=onerror,                # Callback function to handle WebSocket errors.
-#     on_message=onmessage             # Callback function to handle incoming messages from the WebSocket.
-# )
-# # Establish a connection to the Fyers WebSocket
-# ws_fyers.connect()
-
