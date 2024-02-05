@@ -110,6 +110,7 @@ def getEMAData(symbol, resolution, range_from, range_to):
     data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()
     global emadata
     emadata =data
+     
 
 
 if saved_token:
@@ -124,30 +125,49 @@ else:
 
 def identify_Trend(emadata):
     print("******** Identifying the trend ************")
-
     nine_ema_current = emadata['EMA_9'].iloc[-1]
     nine_ema_previous= emadata['EMA_9'].iloc[-2]
     print("9 Ema current :",nine_ema_current, "9_ema_previous:",nine_ema_previous )
-
-    diff = np.diff(emadata)
-
-    print("diff 1",diff[1])
-    print("diff 2",diff[-1])
-
-    angle_rad = np.arctan2(diff[-1], 1)
-    angle_deg = np.degrees(angle_rad)
-    print(angle_deg)
-    if angle_deg > 30:
-        return 'Favorable Condition: Upward Trend with Angle > 30 degrees'
-    elif angle_deg < -30:
-        return 'Favorable Condition: Downward Trend with Angle < -30 degrees'
+    percentage_change = ((nine_ema_current - nine_ema_previous) / nine_ema_previous) * 100
+    print("Percentage chnage is",percentage_change )
+    if abs(percentage_change) > 40:
+        print("Percentage chnage is significant Percentage Change")
     else:
-        return 'Neutral Condition: Sideways Trend'
-  
-    
+        print("Percentage chnage is neutral")
+
+
+def identify_trend(data):
+    trends = []
+
+    for i in range(len(data)):
+        close = data.loc[i, 'Close']
+        ema_9 = data.loc[i, 'EMA_9']
+        ema_15 = data.loc[i, 'EMA_15']
+
+        # Calculate vectors for angle calculation
+        vector_9_ema = np.array([ema_9, close - ema_9])
+        vector_15_ema = np.array([ema_15, close - ema_15])
+
+        # Calculate angles
+        angle_9_ema = np.degrees(np.arccos(np.dot(vector_9_ema, [1, 0]) / (np.linalg.norm(vector_9_ema) * np.linalg.norm([1, 0]))))
+        angle_15_ema = np.degrees(np.arccos(np.dot(vector_15_ema, [1, 0]) / (np.linalg.norm(vector_15_ema) * np.linalg.norm([1, 0]))))
+
+        # Determine trend based on angles
+        if ema_9 > ema_15 and angle_9_ema > 30:
+            trend = "Upper Trend"
+        elif ema_15 > ema_9 and angle_9_ema > 30:
+            trend = "Down Trend"
+        else:
+            trend = "No Clear Trend"
+
+        trends.append(trend)
+
+    data['Trend'] = trends
+    return data
+ 
 def onmessage(message):
     f_flag =0
-    print("Received Message:", message)
+    print("Received Message")
     local_time = time.localtime()
     current_minute = local_time.tm_min
     current_second = local_time.tm_sec
@@ -161,21 +181,19 @@ def onmessage(message):
 
     # getEMAData("NSE:NIFTY50-INDEX",5,"","")
     # print(emadata)
-
-
-    
-
+   
     if (current_minute % 5 == 0 and current_second >=1  and f_flag == 0):
         print("******** 5 ema data updated************")
         getEMAData("NSE:NIFTY50-INDEX",5,"","")
-        nine_ema = emadata['EMA_9'].iloc[-1]
-        fiteen_ema = emadata['EMA_15'].iloc[-1]
-        low =  emadata['Low'].iloc[-1]
-        last_ema= emadata.iloc[-1]
-        print("Last  EMA:",last_ema)
-        identify_Trend(emadata['EMA_9'].tail(2))
-
-    # print("9 EMA:",nine_ema,"15 EMA:",fiteen_ema,"Low:",low)
+        # nine_ema = emadata['EMA_9'].iloc[-1]
+        # fiteen_ema = emadata['EMA_15'].iloc[-1]
+        # low =  emadata['Low'].iloc[-1]
+        # last_ema= emadata.iloc[-1]
+        # print("Last  EMA:",last_ema)
+        # identify_Trend(emadata)
+        df = pd.DataFrame(emadata)
+        result_df = identify_trend(df)
+        print(result_df[['Timestamp', 'Close', 'EMA_9', 'EMA_15', 'Trend']])
        
 
 
