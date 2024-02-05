@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from matplotlib import pyplot as plt
 from tabulate import tabulate
 import os,json, time
-import pandas as pd
+import pandas as pd 
+import numpy as np
 
 global fyers
 position =0
@@ -60,7 +61,7 @@ def generateAccessToken() :
     # Generate the access token using the authorization code
     auth_response = session.generate_token()
     access_token = auth_response['access_token']
-    print(' access token newly generated is =============== :',access_token)
+    # print(' access token newly generated is =============== :',access_token)
 
     return access_token
 
@@ -82,19 +83,19 @@ saved_token = readAccessCodeFromFile()
 def getEMAData(symbol, resolution, range_from, range_to):
     today_date = datetime.now().strftime('%Y-%m-%d')
     yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-    print(f"Yesterday's date: {yesterday_date}")
-    print(f"Today's date: {today_date}")
+    # print(f"Yesterday's date: {yesterday_date}")
+    # print(f"Today's date: {today_date}")
 
     hdata = {
     "symbol":"NSE:NIFTY50-INDEX",
     "resolution":5,
     "date_format":"1",
-    "range_from":2024-2-1,
-    "range_to":2024-2-2,
+    "range_from":yesterday_date,
+    "range_to":today_date,
     "cont_flag":"1"
     }
     response = fyers.history(data=hdata)
-    print(response)
+    # print(response)
    
     for candle in response['candles']:
         epoch_time = candle[0]
@@ -105,12 +106,10 @@ def getEMAData(symbol, resolution, range_from, range_to):
     data = pd.DataFrame.from_dict(response['candles'])
     cols = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
     data.columns = cols
-    data['EMA_5'] = data['Close'].ewm(span=9, adjust=False).mean()
-    data['EMA_20'] = data['Close'].ewm(span=15, adjust=False).mean()
-    # print (data)
+    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()
     global emadata
     emadata =data
-    # print (emadata)
 
 
 if saved_token:
@@ -123,8 +122,29 @@ else:
     access_token = generateAccessToken()
     writeAccessCodeToFile(access_token)
 
+def identify_Trend(emadata):
+    print("******** Identifying the trend ************")
 
+    nine_ema_current = emadata['EMA_9'].iloc[-1]
+    nine_ema_previous= emadata['EMA_9'].iloc[-2]
+    print("9 Ema current :",nine_ema_current, "9_ema_previous:",nine_ema_previous )
 
+    diff = np.diff(emadata)
+
+    print("diff 1",diff[1])
+    print("diff 2",diff[-1])
+
+    angle_rad = np.arctan2(diff[-1], 1)
+    angle_deg = np.degrees(angle_rad)
+    print(angle_deg)
+    if angle_deg > 30:
+        return 'Favorable Condition: Upward Trend with Angle > 30 degrees'
+    elif angle_deg < -30:
+        return 'Favorable Condition: Downward Trend with Angle < -30 degrees'
+    else:
+        return 'Neutral Condition: Sideways Trend'
+  
+    
 def onmessage(message):
     f_flag =0
     print("Received Message:", message)
@@ -135,19 +155,29 @@ def onmessage(message):
     # formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
     # Print the current local time, minute, and second
     # print("Current Local Time:", formatted_time)
-    print("Current Minute:", current_minute)
-    print("Current Second:", current_second)
-    print("Cflag:",f_flag)
+    # print("Current Minute:", current_minute)
+    # print("Current Second:", current_second)
+    # print("Cflag:",f_flag)
 
-    getEMAData("NSE:NIFTY50-INDEX",5,"","")
-    print(emadata)
+    # getEMAData("NSE:NIFTY50-INDEX",5,"","")
+    # print(emadata)
 
-    # if (current_minute % 5 == 0 and current_second >=1  and f_flag == 0):
-    #     print("******** 5 ema data updated************")
-    #     getEMAData("NSE:NIFTY50-INDEX",5,"","")
-    #     emadata
-    #     print("--------ema data --------")
-    #     print(emadata)
+
+    
+
+    if (current_minute % 5 == 0 and current_second >=1  and f_flag == 0):
+        print("******** 5 ema data updated************")
+        getEMAData("NSE:NIFTY50-INDEX",5,"","")
+        nine_ema = emadata['EMA_9'].iloc[-1]
+        fiteen_ema = emadata['EMA_15'].iloc[-1]
+        low =  emadata['Low'].iloc[-1]
+        last_ema= emadata.iloc[-1]
+        print("Last  EMA:",last_ema)
+        identify_Trend(emadata['EMA_9'].tail(2))
+
+    # print("9 EMA:",nine_ema,"15 EMA:",fiteen_ema,"Low:",low)
+       
+
 
 def onerror(message):
     print("Error:", message)
@@ -166,7 +196,7 @@ def onopen():
 
 # Replace the sample access token with your actual access token obtained from Fyers
 ws_access_token = f"{client_id}:{saved_token}"
-print('ws_access_token is ++++++++++++++++:',ws_access_token)
+# print('ws_access_token is ++++++++++++++++:',ws_access_token)
 # Create a FyersDataSocket instance with the provided parameters
 ws_fyers = data_ws.FyersDataSocket(
     access_token=ws_access_token,       # Access token in the format "appid:accesstoken"
