@@ -86,7 +86,7 @@ def generate_history():
     yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     print(f"Yesterday's date: {yesterday_date}")
     hdata = {
-    "symbol":"NSE:SBIN-EQ",
+    "symbol":"NSE:NIFTY50-INDEX",
     "resolution":"5",
     "date_format":"1",
     "range_from":yesterday_date,
@@ -109,9 +109,16 @@ def generate_history():
     data = pd.DataFrame.from_dict(response['candles'])
     cols = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
     data.columns = cols
-    data['EMA_5'] = data['Close'].ewm(span=5, adjust=False).mean()
-    data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
+    data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
+    data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()
     print (data)
+
+    nine_ema = data['EMA_9'].iloc[-2]
+    fiteen_ema = data['EMA_15'].iloc[-2]
+    low =  data['Low'].iloc[-2]
+
+    print("9 EMA :",nine_ema, "15EMA :",fiteen_ema,"Low:",low)
+    
 
 
 if saved_token:
