@@ -106,8 +106,8 @@ def getEMAData():
     data = pd.DataFrame.from_dict(response['candles'])
     cols = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
     data.columns = cols
-    # data['EMA_9'] = data['Close'].ewm(span=9, adjust=False).mean()
-    data['EMA_10'] = data['Close'].ewm(span=10, adjust=False).mean()
+    data['EMA_5'] = data['Close'].ewm(span=5, adjust=False).mean()
+    # data['EMA_10'] = data['Close'].ewm(span=10, adjust=False).mean()
     # data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()
     global emadata
     emadata =data
@@ -175,12 +175,22 @@ def onmessage(message):
     # print(message)
     ltp =message['ltp']
     print("ltp: ",ltp)
-    if (current_minute % 5 == 0 and 5 <= current_second < 6  and f_flag == 0):
+    if (current_minute % 5 == 0 and 5 <= current_second < 7  and f_flag == 0):
         getEMAData()
+        print(emadata)
         # Store the EMA data for the last 5 values in a new array
-        last_5_ema_data = emadata.tail(5)[['Timestamp',  'EMA_10', ]].values.tolist()
+        last_5_ema_data = emadata.tail(5)[['Timestamp',  'EMA_5', ]].values.tolist()
         print(last_5_ema_data)
         
+        # checking the condition for short 
+        if (emadata['Opem'].iloc[-2] > emadata['EMA_5'].iloc[-2]
+            and emadata['High'].iloc[-2] > emadata['EMA_5'].iloc[-2]
+            and emadata['Low'].iloc[-2] > emadata['EMA_5'].iloc[-2]
+            and emadata['Close'].iloc[-2] > emadata['EMA_5'].iloc[-2]
+            and ltp < emadata['Low'].iloc[-2]):
+            
+            strike_price = int(round(ltp -2))
+            pe_stricke  = "NSE:NIFTY24208"+strike_price+"PE"
        
 
 
