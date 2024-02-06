@@ -56,7 +56,7 @@ def generateAccessToken() :
 
 
 def writeAccessCodeToFile(token):
-    with open('authcode.ini', 'w') as file:
+    with open('authcode.txt', 'w') as file:
         file.write(token)
 
 def readAccessCodeFromFile():
@@ -64,7 +64,7 @@ def readAccessCodeFromFile():
         with open('authcode.ini', 'r') as file:
             return file.read().strip()
     except FileNotFoundError:
-        return None
+            return None
     
 saved_token = readAccessCodeFromFile()
 print('Saved token is +++++++++++++++++++:',saved_token)
