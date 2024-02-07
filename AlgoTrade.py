@@ -183,15 +183,35 @@ def onmessage(message):
         print(last_5_ema_data)
         
         # checking the condition for short 
-        if (emadata['Opem'].iloc[-2] > emadata['EMA_5'].iloc[-2]
+        if (emadata['Open'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and emadata['High'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and emadata['Low'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and emadata['Close'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and ltp < emadata['Low'].iloc[-2]):
             
             strike_price = int(round(ltp -2))
-            pe_stricke  = "NSE:NIFTY24208"+strike_price+"PE"
+            print("conditions for shorting met ")
+
+            if (position==0 and flag ==0):
+                strike_price = int(round(ltp -2))
+                pe_strike  = "NSE:NIFTY24208"+strike_price+"PE"
+                print(" ATM price :-----",pe_strike)
        
+                data = {
+                        "symbol":str(pe_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+
 
 
     # formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
@@ -201,8 +221,7 @@ def onmessage(message):
     # print("Current Second:", current_second)
     # print("Cflag:",f_flag)
     # print(emadata)
-   
-
+  
     # print("******** 10 ema data updated************")
     # getEMAData()
     # nine_ema = emadata['EMA_9'].iloc[-1]
@@ -210,9 +229,6 @@ def onmessage(message):
     # df = pd.DataFrame(emadata)
     # # result_df = identify_trend(df)
     # print(df[['Timestamp','Open' ,'Close', 'EMA_9','EMA_10','EMA_15']].iloc[-1])
-
-
-
 
     # if (current_minute % 5 == 0 and 5 <= current_second < 15  and f_flag == 0):
     #     print("******** 5 ema data updated************")
