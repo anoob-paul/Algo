@@ -9,12 +9,7 @@ import pandas as pd
 import numpy as np
 
 global fyers
-position =0
-stop_loss=0
-flag =0
-exit =0
-target =0
-strike =''
+
 
 # reading from config file 
 def read_config(file_path):
@@ -166,7 +161,7 @@ else:
 #     return data
  
 def onmessage(message):
-    f_flag =0
+    global position , stop_loss, flag , exit, target, strike
     local_time = time.localtime()
     formatted_time = time.strftime("%b %d , %H:%M:%S", local_time)    
     current_minute = local_time.tm_min
@@ -175,7 +170,7 @@ def onmessage(message):
     # print(message)
     ltp =message['ltp']
     print("ltp: ",ltp)
-    if (current_minute % 5 == 0 and 5 <= current_second < 7  and f_flag == 0):
+    if (current_minute % 5 == 0 and 5 <= current_second < 7  and flag == 0):
         getEMAData()
         print(emadata)
         # Store the EMA data for the last 5 values in a new array
@@ -190,10 +185,11 @@ def onmessage(message):
             and ltp < emadata['Low'].iloc[-2]):
             
             strike_price = int(round(ltp -2))
-            print("conditions for shorting met ")
+            print("conditions for shorting (PE Buy)met ")
 
             if (position==0 and flag ==0):
                 strike_price = int(round(ltp -2))
+                print("Info : 5 EMA PE order about to execute")
                 pe_strike  = "NSE:NIFTY24208"+strike_price+"PE"
                 print(" ATM price :-----",pe_strike)
        
@@ -211,7 +207,60 @@ def onmessage(message):
                         "orderTag":"tag1"
                         }
                 response = fyers.place_order(data=data)
+                position = flag =1
+                print("Info : 5 EMA PE order executed:",response[message])
 
+                entry_price= message['ltp']
+                stop_loss = emadata['High'].iloc[-2] 
+                target= message['ltp'] - ((emadata['High'].iloc[-2] - emadata['Low'].iloc[-2])*3)
+
+                print("Info : 5 EMA PE order - entry price: ",entry_price)
+                print("Info : 5 EMA PE order - stop lose identified: ",stop_loss)
+                print("Info : 5 EMA PE order - target point identified: ",target)
+
+                # stop loss code 
+            if (position ==1 and message['ltp'] > stop_loss):
+                data = {
+                        "symbol":str(pe_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":-1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+                print("Info : 5 EMA PE Stop Loss order executed:",response[message])
+                position = flag = 0
+                entry_price =0
+                stop_loss =0
+                target=0
+
+            #target code
+            if (position ==1 and message['ltp'] <= target):
+                data = {
+                        "symbol":str(pe_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":-1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+                print("Info : 5 EMA PE target order executed:",response[message])
+                position = flag = 0
+                entry_price =0
+                stop_loss =0
+                target=0
 
 
     # formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
