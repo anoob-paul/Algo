@@ -8,8 +8,14 @@ import os,json, time
 import pandas as pd 
 import numpy as np
 
-global fyers
-
+global fyers 
+# global position , stop_loss,  exit, target, strike
+# flag =0
+# position= 0
+# stop_loss = 0
+# exit = 0
+# target= 0
+# strike= 0
 
 # reading from config file 
 def read_config(file_path):
@@ -96,21 +102,22 @@ def getEMAData(symbol,resolution):
         epoch_time = candle[0]
         timestamp = datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
         candle[0] = timestamp
-    
-    
+        
     data = pd.DataFrame.from_dict(response['candles'])
     cols = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
     data.columns = cols
-    if (resolution == 5):
-        data['EMA_5'] = data['Close'].ewm(span=5, adjust=False).mean()
-    else:
-        data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()   
+    span = resolution
+    ema_col_name = 'EMA_' + str(span)
+    data[ema_col_name] = data['Close'].ewm(span=span, adjust=False).mean()
+
+    # if (resolution == 5):
+    #     data['EMA_5'] = data['Close'].ewm(span=5, adjust=False).mean()
+    # else:
+    #     data['EMA_15'] = data['Close'].ewm(span=15, adjust=False).mean()   
     
     global emadata
     emadata =data
      
-
-
 if saved_token:
     print('Token loaded from file')
     fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=saved_token, log_path="")
@@ -123,36 +130,26 @@ else:
 
  
 def onmessage(message):
-    global position , stop_loss, flag , exit, target, strike
+    flag =0
+    position= 0
+    stop_loss = 0
+    exit = 0
+    target= 0
+    strike= 0
+    
     local_time = time.localtime()
     formatted_time = time.strftime("%b %d , %H:%M:%S", local_time)    
     current_minute = local_time.tm_min
     current_second = local_time.tm_sec
-    # print("Time ",formatted_time)
+    print("Time ",formatted_time)
     # print(message)
-    ltp =message['ltp']
-    print("ltp: ",ltp)
-    getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=5 )
-    print(emadata)
-    print("ttttttttttttttttttttttttttttttt")
-    getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=15 )
-    print(emadata)
+    
+    if (current_minute % 5 == 0 and 5 < current_second < 7 and flag==0):
 
-
-
-    if (current_minute % 5 == 0 and 5 <= current_second < 7  and flag == 0):
         getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=5 )
         print(emadata)
-        print("ttttttttttttttttttttttttttttttt")
+        ltp =message['ltp']
 
-        getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=15 )
-        print(emadata)
-
-        # Store the EMA data for the last 5 values in a new array
-        last_5_ema_data = emadata.tail(5)[['Timestamp',  'EMA_5', ]].values.tolist()
-        print(last_5_ema_data)
-        
-        # checking the condition for short 
         if (emadata['Open'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and emadata['High'].iloc[-2] > emadata['EMA_5'].iloc[-2]
             and emadata['Low'].iloc[-2] > emadata['EMA_5'].iloc[-2]
@@ -237,36 +234,6 @@ def onmessage(message):
                 stop_loss =0
                 target=0
 
-
-    # formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-    # Print the current local time, minute, and second
-    # print("Current Local Time:", formatted_time)
-    # print("Current Minute:", current_minute)
-    # print("Current Second:", current_second)
-    # print("Cflag:",f_flag)
-    # print(emadata)
-  
-    # print("******** 10 ema data updated************")
-    # getEMAData()
-    # nine_ema = emadata['EMA_9'].iloc[-1]
-    # ten_ema = emadata['EMA_10'].iloc[-1]
-    # df = pd.DataFrame(emadata)
-    # # result_df = identify_trend(df)
-    # print(df[['Timestamp','Open' ,'Close', 'EMA_9','EMA_10','EMA_15']].iloc[-1])
-
-    # if (current_minute % 5 == 0 and 5 <= current_second < 15  and f_flag == 0):
-    #     print("******** 5 ema data updated************")
-    #     getEMAData("NSE:NIFTY50-INDEX",5,"","")
-    #     # nine_ema = emadata['EMA_9'].iloc[-1]
-    #     # fiteen_ema = emadata['EMA_15'].iloc[-1]
-    #     # low =  emadata['Low'].iloc[-1]
-    #     # last_ema= emadata.iloc[-1]
-    #     # print("Last  EMA:",last_ema)
-    #     # identify_Trend(emadata)
-    #     df = pd.DataFrame(emadata)
-    #     result_df = identify_trend(df)
-    #     print(result_df[['Timestamp','Open' ,'Close', 'EMA_9', 'EMA_15', 'Trend']])
-       
 
 
 def onerror(message):
