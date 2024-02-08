@@ -9,14 +9,6 @@ import pandas as pd
 import numpy as np
 
 global fyers 
-# global position , stop_loss,  exit, target, strike
-# flag =0
-# position= 0
-# stop_loss = 0
-# exit = 0
-# target= 0
-# strike= 0
-
 # reading from config file 
 def read_config(file_path):
     config = {}
@@ -82,6 +74,7 @@ saved_token = readAccessCodeFromFile()
 # print('Saved token is +++++++++++++++++++:',saved_token)
 
 def getEMAData(symbol,resolution):
+    
     today_date = datetime.now().strftime('%Y-%m-%d')
     yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     # print(f"Yesterday's date: {yesterday_date}")
@@ -130,8 +123,10 @@ else:
 
  
 def onmessage(message):
-    flag =0
-    position= 0
+    pe_flag =0
+    ce_flag =0
+    pe_position= 0
+    ce_position =0
     stop_loss = 0
     exit = 0
     target= 0
@@ -143,9 +138,9 @@ def onmessage(message):
     current_second = local_time.tm_sec
     print("Time ",formatted_time)
     # print(message)
-    
-    if (current_minute % 5 == 0 and 5 < current_second < 7 and flag==0):
 
+    # Code for put buying starts from here    
+    if (current_minute % 5 == 0 and 5 < current_second < 7 and flag==0):
         getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=5 )
         print(emadata)
         ltp =message['ltp']
@@ -159,10 +154,10 @@ def onmessage(message):
             strike_price = int(round(ltp -2))
             print("conditions for shorting (PE Buy)met ")
 
-            if (position==0 and flag ==0):
+            if (pe_position==0 and flag ==0):
                 strike_price = int(round(ltp -2))
                 print("Info : 5 EMA PE order about to execute")
-                pe_strike  = "NSE:NIFTY24208"+strike_price+"PE"
+                pe_strike  = "NSE:NIFTY24215"+strike_price+"PE"
                 print(" ATM price :-----",pe_strike)
        
                 data = {
@@ -179,7 +174,7 @@ def onmessage(message):
                         "orderTag":"tag1"
                         }
                 response = fyers.place_order(data=data)
-                position = flag =1
+                pe_position = flag =1
                 print("Info : 5 EMA PE order executed:",response[message])
 
                 entry_price= message['ltp']
@@ -191,7 +186,7 @@ def onmessage(message):
                 print("Info : 5 EMA PE order - target point identified: ",target)
 
                 # stop loss code 
-            if (position ==1 and message['ltp'] > stop_loss):
+            if (pe_position ==1 and message['ltp'] > stop_loss):
                 data = {
                         "symbol":str(pe_strike),
                         "qty":15,
@@ -207,13 +202,13 @@ def onmessage(message):
                         }
                 response = fyers.place_order(data=data)
                 print("Info : 5 EMA PE Stop Loss order executed:",response[message])
-                position = flag = 0
+                pe_position = flag = 0
                 entry_price =0
                 stop_loss =0
                 target=0
 
             #target code
-            if (position ==1 and message['ltp'] <= target):
+            if (pe_position ==1 and message['ltp'] <= target):
                 data = {
                         "symbol":str(pe_strike),
                         "qty":15,
@@ -229,12 +224,103 @@ def onmessage(message):
                         }
                 response = fyers.place_order(data=data)
                 print("Info : 5 EMA PE target order executed:",response[message])
-                position = flag = 0
+                pe_position = flag = 0
+                entry_price =0
+                stop_loss =0
+                target=0
+# Code for put buying ends hhere
+# COde for CE buy starts form below*********************************************
+                
+    if (current_minute % 15 == 0 and 5 < current_second < 7 and flag==0):
+        getEMAData(symbol="NSE:NIFTY50-INDEX",resolution=5 )
+        print(emadata)
+        ltp =message['ltp']
+
+        if (emadata['Open'].iloc[-2] < emadata['EMA_5'].iloc[-2]
+            and emadata['High'].iloc[-2] < emadata['EMA_5'].iloc[-2]
+            and emadata['Low'].iloc[-2] < emadata['EMA_5'].iloc[-2]
+            and emadata['Close'].iloc[-2] < emadata['EMA_5'].iloc[-2]
+            and ltp < emadata['High'].iloc[-2]):
+                     
+            print("conditions for Long (CE Buy)met ")
+
+            if (ce_position==0 and ce_flag ==0):
+                strike_price = int(round(ltp -2))
+                print("Info : 5 EMA CE order about to execute")
+                ce_strike  = "NSE:NIFTY24215"+strike_price+"CE"
+                print(" ATM price :-----",ce_strike)
+       
+                data = {
+                        "symbol":str(ce_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+                ce_position = flag =1
+                print("Info : 5 EMA CE order executed:",response[message])
+                entry_price= message['ltp']
+                stop_loss = emadata['Low'].iloc[-2] 
+                target= message['ltp'] - ((emadata['High'].iloc[-2] - emadata['Low'].iloc[-2])*2)
+                print("Info : 5 EMA CE order - entry price: ",entry_price)
+                print("Info : 5 EMA CE order - stop lose identified: ",stop_loss)
+                print("Info : 5 EMA CE order - target point identified: ",target)
+
+            # stop loss code 
+            if (ce_position ==1 and message['ltp'] < stop_loss):
+                data = {
+                        "symbol":str(ce_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":-1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+                print("Info : 5 EMA CE Stop Loss order executed:",response[message])
+                ce_position = flag = 0
                 entry_price =0
                 stop_loss =0
                 target=0
 
+            #target code
+            if (ce_position ==1 and message['ltp'] >= target):
+                data = {
+                        "symbol":str(ce_strike),
+                        "qty":15,
+                        "type":2,
+                        "side":-1,
+                        "productType":"MARGIN",
+                        "limitPrice":0,
+                        "stopPrice":0,
+                        "validity":"DAY",
+                        "disclosedQty":0,
+                        "offlineOrder":False,
+                        "orderTag":"tag1"
+                        }
+                response = fyers.place_order(data=data)
+                print("Info : 5 EMA CE target order executed:",response[message])
+                pe_position = flag = 0
+                entry_price =0
+                stop_loss =0
+                target=0
+# Code for put buying ends hhere
 
+
+
+# Code for CE buy ends here    **********************************             
 
 def onerror(message):
     print("Error:", message)
