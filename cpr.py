@@ -137,9 +137,9 @@ def generate_cpr():
     print("PDL Low Price:", low_price)
     print("Previous Close Price:", prev_close_price)
 
-    cpr=  (high_price + low_price + prev_close_price) / 3.0
-    bc =  (high_price + low_price) / 2.0
-    tc=   (cpr + (cpr - bc))
+    cpr=   round((high_price + low_price + prev_close_price) / 3.0, 2) 
+    bc =  round (((high_price + low_price) / 2.0),2)
+    tc=   round ((cpr + (cpr - bc)),2)
 
     print("CPR:", cpr)
     print("BC:", bc)
