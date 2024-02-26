@@ -107,7 +107,6 @@ def generate_cpr():
         yesterday_date = friday
 
  
-
     hdata = {
     "symbol":"NSE:NIFTY50-INDEX",
     "resolution":"1D", 
@@ -117,6 +116,11 @@ def generate_cpr():
     "cont_flag":"1"
     }
     response = fyers.history(data=hdata) # fetching the data for the timeframe
+    for candle in response['candles']:
+        epoch_time = candle[0]
+        timestamp = datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
+        candle[0] = timestamp
+
     print(response)
     print("**************************")
 
