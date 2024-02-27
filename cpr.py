@@ -112,7 +112,7 @@ def generate_cpr():
     "resolution":"1D", 
     "date_format":"1",
     "range_from":yesterday_date,
-    "range_to":today_date,
+    "range_to":yesterday_date,
     "cont_flag":"1"
     }
     response = fyers.history(data=hdata) # fetching the data for the timeframe
@@ -121,23 +121,12 @@ def generate_cpr():
         timestamp = datetime.fromtimestamp(epoch_time).strftime('%Y-%m-%d %H:%M:%S')
         candle[0] = timestamp
 
-    print(response)
-    print("**************************")
+    print(" Time :",candle[0])
 
-    pddata = {"symbols":"NSE:NIFTY50-INDEX"}
-
-    response1 = fyers.quotes(data=pddata)
-    # print("response :",response1)
-    data = response1['d'][0]['v']  # Extracting the relevant dictionary containing the price information
-    high_price = data['high_price']
-    low_price = data['low_price']
-    prev_close_price = data['prev_close_price']
-
-    print("PDH High Price:", high_price)
-    print("PDL Low Price:", low_price)
-    print("Previous Close Price:", prev_close_price)
-
-    cpr=   round((high_price + low_price + prev_close_price) / 3.0, 2) 
+    high_price = candle[2]
+    low_price = candle[3]
+    close_price = candle[4]
+    cpr=   round((high_price + low_price + close_price) / 3.0, 2) 
     bc =  round (((high_price + low_price) / 2.0),2)
     tc=   round ((cpr + (cpr - bc)),2)
 
@@ -146,7 +135,19 @@ def generate_cpr():
     print("TC:", tc)
 
 
- 
+    # pddata = {"symbols":"NSE:NIFTY50-INDEX"}
+    # response1 = fyers.quotes(data=pddata)
+    # print("response :",response1)
+    # data = response1['d'][0]['v']  # Extracting the relevant dictionary containing the price information
+    # high_price = data['high_price']
+    # low_price = data['low_price']
+    # prev_close_price = data['prev_close_price']
+
+    # print("PDH High Price:", high_price)
+    # print("PDL Low Price:", low_price)
+    # print("Previous Close Price:", prev_close_price)
+
+   
 
 if saved_token:
     print('Token loaded from file')
