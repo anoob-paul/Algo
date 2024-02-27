@@ -134,19 +134,6 @@ def generate_cpr():
     print("BC:", bc)
     print("TC:", tc)
 
-
-    # pddata = {"symbols":"NSE:NIFTY50-INDEX"}
-    # response1 = fyers.quotes(data=pddata)
-    # print("response :",response1)
-    # data = response1['d'][0]['v']  # Extracting the relevant dictionary containing the price information
-    # high_price = data['high_price']
-    # low_price = data['low_price']
-    # prev_close_price = data['prev_close_price']
-
-    # print("PDH High Price:", high_price)
-    # print("PDL Low Price:", low_price)
-    # print("Previous Close Price:", prev_close_price)
-
    
 
 if saved_token:
