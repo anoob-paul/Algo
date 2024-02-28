@@ -100,7 +100,6 @@ def generate_cpr():
     print(f"Yesterday is : {yesterday_date}, {yesterday_of_week}")
 
     
-    # print("Today is", days[day_of_week])
     if today_of_week == 0:
         friday = (datetime.now() - timedelta(days=3)).strftime('%Y-%m-%d')
         print("since today is monday, assigning previous market day as friday")
@@ -130,9 +129,20 @@ def generate_cpr():
     bc =  round (((high_price + low_price) / 2.0),2)
     tc=   round ((cpr + (cpr - bc)),2)
 
+    r1= round((2*cpr-low_price),2)
+    s1= round((2*cpr-high_price),2)
+    r2=round((cpr+(high_price-low_price)),2)
+    s2=round((cpr-(high_price-low_price)),2)
+
+
     print("CPR:", cpr)
     print("BC:", bc)
     print("TC:", tc)
+    print ("R1:",r1)
+    print ("S1:",s1)
+    print ("R2:",r2)
+    print ("S2:",s2)
+
 
    
 
