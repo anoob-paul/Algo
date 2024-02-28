@@ -134,7 +134,10 @@ def generate_cpr():
     r2=round((cpr+(high_price-low_price)),2)
     s2=round((cpr-(high_price-low_price)),2)
 
+    r3 = round((high_price + 2* (cpr - low_price)),2)
+    s3 =  round((low_price- 2*(high_price-cpr)),2)
 
+  
     print("CPR:", cpr)
     print("BC:", bc)
     print("TC:", tc)
@@ -142,10 +145,10 @@ def generate_cpr():
     print ("S1:",s1)
     print ("R2:",r2)
     print ("S2:",s2)
+    print ("R3:",r3)
+    print ("S3:",s3)
 
-
-   
-
+ 
 if saved_token:
     print('Token loaded from file')
     fyers = fyersModel.FyersModel(client_id=client_id, is_async=False, token=saved_token, log_path="")
