@@ -1,0 +1,8 @@
+//@version=5
+indicator(title="EMA 9 and 15", shorttitle="EMA 9-15", overlay=true)
+
+ema9 = ta.ema(close, 9)
+ema15 = ta.ema(close, 15)
+
+plot(ema9, color=color.green, title="EMA 9")
+plot(ema15, color=color.red, title="EMA 15")
